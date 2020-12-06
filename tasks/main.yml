@@ -1,5 +1,7 @@
 ---
 
+- include_vars: vault
+
 - name: Setup passwordless sudo for sudo group
   ansible.builtin.lineinfile:
     path: /etc/sudoers
