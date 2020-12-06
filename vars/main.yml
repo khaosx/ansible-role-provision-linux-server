@@ -1,0 +1,7 @@
+---
+
+# Non-Sensitive
+# become_user: root
+
+# Sensitive
+ansible_become_password: "{{ vault_ansible_become_password }}"
