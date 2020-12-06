@@ -1,0 +1,22 @@
+---
+
+- name: reboot-linux-host
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by Ansible - system updated"
+    reboot_timeout: 600
+    pre_reboot_delay: 15
+    test_command: whoami
+
+- name: reload-ufw-firewall
+  community.general.ufw:
+    state: reloaded
+
+- name: restart-sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+
+- name: restart-timesync
+  ansible.builtin.service:
+    name: systemd-timesyncd.service
+    state: restarted
