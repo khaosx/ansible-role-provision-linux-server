@@ -1,0 +1,62 @@
+---
+
+- name: Setup passwordless sudo for sudo group
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Set timezone
+  community.general.timezone:
+    name: America/New_York
+  notify: restart-timesync
+
+- name: Create /etc/systemd/timesyncd.conf
+  ansible.builtin.copy:
+    src: files/etc_systemd_timesyncd.conf
+    dest: /etc/systemd/timesyncd.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: restart-timesync
+
+- name: Start and enable systemd-timesyncd
+  ansible.builtin.service:
+    name: systemd-timesyncd.service
+    enabled: yes
+    state: started
+
+- name: Install required system packages
+  ansible.builtin.apt: name={{ item }} state=latest update_cache=yes
+  loop:
+    - apt-transport-https
+    - python3-pip
+    - virtualenv
+    - net-tools
+
+- name: Update and upgrade apt packages
+  ansible.builtin.apt: update_cache=yes upgrade=safe cache_valid_time=86400 install_recommends=no
+
+- name: Disable MOTD components
+  ansible.builtin.file:
+    path: /etc/update-motd.d/{{ item }}
+    mode: u-x,g-x,o-x
+  loop: [ '10-help-text', '50-motd-news']
+
+- name: Disable Root Login
+  ansible.builtin.lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp='^PermitRootLogin'
+    line="PermitRootLogin no"
+    state=present
+    backup=yes
+  notify: restart sshd
+
+- name: Check if a reboot is needed
+  ansible.builtin.stat: path=/var/run/reboot-required get_md5=no
+  register: reboot_required_file
+  changed_when: reboot_required_file.stat.exists
+  notify: reboot-linux-host
