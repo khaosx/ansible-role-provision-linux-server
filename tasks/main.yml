@@ -36,9 +36,33 @@
     - python3-pip
     - virtualenv
     - net-tools
+    - ufw
 
 - name: Update and upgrade apt packages
   ansible.builtin.apt: update_cache=yes upgrade=safe cache_valid_time=86400 install_recommends=no
+  
+- name: Turn off IPv6 in UFW
+  replace:
+    path: /etc/default/ufw
+    regexp: 'IPV6=yes'
+    replace: 'IPV6=no'
+
+## Allow common ports
+- name: Allow common services <-- RFC1918
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.protocol }}"
+    src: '192.168.0.0/16'
+    comment: "{{ item.comment }}"
+  loop:
+    - { port: '22', protocol: 'tcp', comment: 'SSH (22\TCP) <-- RFC1918'}
+    - { port: '53', protocol: 'tcp', comment: 'DNS (53\TCP) <-- RFC1918'}
+    - { port: '53', protocol: 'udp', comment: 'DNS (53\UDP) <-- RFC1918'}
+    - { port: '67', protocol: 'tcp', comment: 'DHCP (67\TCP) <-- RFC1918'}
+    - { port: '68', protocol: 'tcp', comment: 'DHCP (68\TCP) <-- RFC1918'}
+    - { port: '123', protocol: 'udp', comment: 'NTP (123\UDP) <-- RFC1918'}
+  notify: reload-ufw-firewall
 
 - name: Disable MOTD components
   ansible.builtin.file:
@@ -53,7 +77,7 @@
     line="PermitRootLogin no"
     state=present
     backup=yes
-  notify: restart sshd
+  notify: restart-sshd
 
 - name: Check if a reboot is needed
   ansible.builtin.stat: path=/var/run/reboot-required get_md5=no
