@@ -20,6 +20,10 @@ An Ansible role that applies full provisioning to a newly built Ubuntu server.
 | `ntp_primary`                      | `palladium.khaosx.io`   | Primary NTP server.                                          |
 | `ntp_secondary`                    | `time.apple.com`        | Secondary NTP server.                                        |
 
+## Installation
+
+`ansible-galaxy role install khaosx.provision-linux-server`
+
 ## Example Playbook
 
 ```yaml
@@ -37,6 +41,7 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 ## Author Information
 Created by [Kristopher Newman](https://github.com/khaosx)  
 GitHub Repository: [ansible-role-provision-linux-server](https://github.com/khaosx/ansible-role-provision-linux-server)  
+Ansible Galaxy: [khaosx.provision-linux-server](https://galaxy.ansible.com/ui/standalone/roles/khaosx/plex-server/documentation/)
 
 ## Contributing
 Contributions are welcome! If you have improvements or feature requests, please open an issue or submit a pull request on GitHub.
