@@ -2,17 +2,17 @@
 dependencies: []
 
 galaxy_info:
-  role_name: homebridge
+  role_name: provision_linux_server
   author: Kristopher Newman
-  description: Install and configure Homebridge
+  description: Ansible role to provision a newly deployed Linux server
   license: MIT
-  min_ansible_version: 2.10
+  min_ansible_version: "2.10"
   platforms:
-    - name: Debian
-      versions:
-        - all
     - name: Ubuntu
       versions:
-        - all
+        - noble
+        - jammy
   galaxy_tags:
-    - homebridge
+    - provision
+    - linux
+    - Ubuntu

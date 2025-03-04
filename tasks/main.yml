@@ -1,0 +1,122 @@
+---
+
+- name: Disable WiFi/Bluetooth
+  ansible.builtin.copy:
+    src: raspi-blacklist.conf
+    dest: /etc/modprobe.d/raspi-blacklist.conf
+    mode: "0600"
+  when: 
+    - "'raspi' in ansible_kernel"
+    - blacklist_wireless_pi
+
+- name: Upgrade Ubuntu 22.04 to 22.04.5 LTS
+  ansible.builtin.apt:
+    name: "linux-generic-hwe-22.04"
+    update_cache: true
+    autoclean: true
+    install_recommends: true
+    state: present
+  when:
+    - ansible_distribution == "Ubuntu"
+    - ansible_distribution_version == "22.04"
+
+- name: GPU check
+  ansible.builtin.command:
+    cmd: "lshw -short -class display"
+  register: gpu_list
+  ignore_errors: true
+  changed_when: false
+  failed_when: false
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Setup passwordless sudo for sudo group
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Disable Root Login
+  ansible.builtin.lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: "PermitRootLogin no"
+    state: present
+    backup: true
+  notify: Restart SSH
+
+- name: Disable MOTD components
+  ansible.builtin.file:
+    path: /etc/update-motd.d/{{ item }}
+    mode: u-x,g-x,o-x
+  loop: ['10-help-text', '50-motd-news']
+
+- name: Configure NTP
+  block:
+    - name: Ensure timesyncd.conf.d directory exists
+      ansible.builtin.file:
+        path: "/etc/systemd/timesyncd.conf.d"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Set timezone
+      community.general.timezone:
+        name: "America/New_York"
+      notify: Restart timesync
+
+    - name: Create /etc/systemd/timesyncd.conf
+      ansible.builtin.template:
+        src: "khaosx.conf.j2"
+        dest: "/etc/systemd/timesyncd.conf.d/khaosx.conf"
+        owner: root
+        group: root
+        mode: "0644"
+        backup: true
+      notify: Restart timesync
+
+- name: Update apt cache and packages
+  ansible.builtin.apt:
+    name: "*"
+    state: latest # noqa package-latest
+    update_cache: true
+    autoclean: true
+    cache_valid_time: 3600
+
+- name: Install pre-requisites
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  with_items: '{{ apt_install_packages }}'
+
+- name: Install Intel driver tools for iGPU
+  ansible.builtin.apt:
+    name: intel-gpu-tools
+  when:
+    - gpu_list.stdout.find('UHD Graphics') != -1 or gpu_list.stdout.find('Iris Xe Graphics') != -1
+
+- name: Install QEMU guest tools on VM
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+  when: ansible_system_vendor == "QEMU"
+  notify: Reboot Ubuntu server
+
+- name: Enable QEMU guest tools on VM
+  ansible.builtin.systemd_service:
+    name: qemu-guest-agent
+    enabled: true
+  when: ansible_system_vendor == "QEMU"
+  notify: Reboot Ubuntu server
+
+- name: Check if a reboot is needed
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_checksum: false
+  register: reboot_required_file
+  changed_when: reboot_required_file.stat.exists
+  notify: Reboot Ubuntu server

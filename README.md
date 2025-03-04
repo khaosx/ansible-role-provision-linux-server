@@ -1,36 +1,34 @@
-# Ansible Role: <ROLENAME>
+# Ansible Role: provision_linux_server
 
-An Ansible role that installs and configures [role](https://link.com/), `Description of what this app does`
+An Ansible role that applies full provisioning to a newly built Ubuntu server.
 
 ## Requirements
 
 - Ansible 2.9 or higher
 - Supported Platforms:
-  - Debian 10 (Buster)
-  - Debian 11 (Bullseye)
-  - Ubuntu 20.04 LTS (Focal)
   - Ubuntu 22.04 LTS (Jammy)
+  - Ubuntu 24.04 LTS (Noble)
 - The target machine should have internet access to download packages and repositories.
 
 ## Role Variables
 
 | Variable                           | Default Value           | Description                                                  |
 | ---------------------------------- | ----------------------- | ------------------------------------------------------------ |
-| `homebridge_user`                  | `homebridge`            | The system user under which Homebridge runs.                 |
-| `homebridge_group`                 | `homebridge`            | The system group under which Homebridge runs.                |
-| `homebridge_version`               | `latest`                | The version of Homebridge to install.                        |
-| `nodejs_version`                   | `14.x`                  | The version of Node.js to install.                           |
-| `homebridge_config_dir`            | `/var/lib/homebridge`   | The directory where Homebridge configuration will be stored. |
+| `blacklist_wireless_pi`            | `false`                 | Whether to blacklist wireless on Raspberry Pi.               |
+| `apt_install_packages`             | List of packages        | List of packages to install via apt.                         |
+| `ntp_timezone`                     | `America/New_York`      | Timezone for NTP configuration.                              |
+| `ntp_primary`                      | `palladium.khaosx.io`   | Primary NTP server.                                          |
+| `ntp_secondary`                    | `time.apple.com`        | Secondary NTP server.                                        |
 
 ## Example Playbook
 
 ```yaml
 ---
-- name: Install and configure Homebridge
-  hosts: homebridge_servers
+- name: Provision server to prepare for app deployment
+  hosts: linux_servers
   become: yes
   roles:
-    - role: homebridge
+    - role: provision_linux_server
 ```
 
 ## License
@@ -38,8 +36,7 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 
 ## Author Information
 Created by [Kristopher Newman](https://github.com/khaosx)  
-GitHub Repository: [ansible-role-plex-server](https://github.com/khaosx/ansible-role-plex-server)  
-Ansible Galaxy: [khaosx.plex-server](https://galaxy.ansible.com/ui/standalone/roles/khaosx/plex-server/documentation/)
+GitHub Repository: [ansible-role-provision-linux-server](https://github.com/khaosx/ansible-role-provision-linux-server)  
 
 ## Contributing
 Contributions are welcome! If you have improvements or feature requests, please open an issue or submit a pull request on GitHub.

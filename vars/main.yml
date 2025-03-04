@@ -1,0 +1,21 @@
+---
+blacklist_wireless_pi: false
+
+apt_install_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - apt-transport-https
+  - software-properties-common
+  - dialog
+  - apt-utils
+  - python3-pip
+  - python3-bottle
+  - zip
+  - unzip
+  - tree
+
+# Time services
+ntp_timezone: America/New_York
+ntp_primary: palladium.khaosx.io
+ntp_secondary: time.apple.com

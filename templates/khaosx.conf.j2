@@ -1,0 +1,9 @@
+# {{ ansible_managed | comment }}
+
+# This file should be placed in /etc/systemd/timesyncd.conf.d/
+#
+[Time]
+NTP={{ ntp_primary }}
+FallbackNTP={{ ntp_secondary }}
+
+# End File
